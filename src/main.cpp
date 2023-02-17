@@ -1,4 +1,5 @@
 // Include application, user and local libraries
+//tft display updated
 #include "SPI.h"
 #include "TFT_22_ILI9225.h"
 #include "FreeSans24pt7b.h"
