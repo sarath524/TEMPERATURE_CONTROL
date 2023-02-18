@@ -3,6 +3,7 @@
    
 ## TFT Display
    Do the 
+   ![TFT display doc image](https://github.com/sarath522/phloton/blob/master/1676460248817.JPEG)
    1. below 4 degree Celcius show in Green colour
    2. Above 4 degree Celcius show in Red Colour
    3. Battery when below 20% show in Yellow colour
