@@ -27,8 +27,9 @@
    show the date and time in top left corner
 ## BLE
    Need to transfer the voltage, current, battery level, Temp Data (Avg & Atm Temp)
- ## SD Card
-  store value of temperature in the sd card. 
+## SD Card
+ - Every one Minute Avg Temp data to be stored in internal memory (SD card)
+ * Avg temp & Timing data to be stored in SD card at lid opening & closing Condition 
   
  2 - 7 °C – Blue Led
  
