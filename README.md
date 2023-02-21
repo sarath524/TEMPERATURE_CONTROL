@@ -12,6 +12,23 @@
    6. battery bar and bluetooth symbol show in top right corner
    7. Only the Avg temp (Middle & Bottom of the Chamber temp) & Amb temp will be 
       shown in the display
+### process for TFT display
+     so here we are used ESP32 wrover kit and 2.0 TFT display with ILI9225 driver used
+     
+     Connections
+      define TFT_RST 26  // IO 26
+      define TFT_RS  25  // IO 25
+      define TFT_CLK 14  // HSPI-SCK
+      define TFT_SDI 13  // HSPI-MOSI
+      define TFT_CS  15  // HSPI-SS0
+      define TFT_LED 0   
+      
+     Library used SPI, TFT_22_ILI9225 and FreeSans24pt7b
+      SPI - we are communicating through spi so we are using spi protocol.
+      TFT_22_ILI9225 - TFT display contains ili9225 driver so dwld and used this header file
+      FreeSans24pt7b - In ili9225 driver header contains only Two font(Terminal12x16,Terminal6x8) so we are added extra header to used bigger font.
+      
+   
 ## Temperature sensor
    Take Middle & Bottom of the Chamber temp and average it, display in tft and display the ambient temp value
 ## PWM
