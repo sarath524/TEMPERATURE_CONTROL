@@ -56,18 +56,21 @@ void temp_sensor_voltage() {
   float V1, ln0,V2,V3,V4,V5,V6,ln1,ln2;
  
 
-  for (int i = 0; i < 50; i++) {
+  for (int i = 0; i < 50; i++) 
+  {
   sensor_value0 = sensor_value0 + analogRead(sensor_analog_pin0);
   sensor_analogue0=sensor_value0/50;
-}
-for (int i = 0; i < 50; i++) {
+  }
+for (int i = 0; i < 50; i++)
+ {
   sensor_value1 = sensor_value1 + analogRead(sensor_analog_pin1);
   sensor_analogue1=sensor_value1/50;
-}
-for (int i = 0; i < 50; i++) {
+ }
+for (int i = 0; i < 50; i++)
+ {
   sensor_value2 = sensor_value2 + analogRead(sensor_analog_pin2);
   sensor_analogue2=sensor_value2/50;
-}
+ }
 
   //sensor_analogue = analogRead(sensor_analog_pin);
   // sensor_analogue = sensor_value / 5;
