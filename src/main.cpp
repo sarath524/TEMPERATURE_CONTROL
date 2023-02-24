@@ -51,8 +51,6 @@ class MyServerCallbacks : public BLEServerCallbacks
   }
 };
 
-
-
 void temp_sensor_voltage() {
 
 int sensor_value0 = 0;
