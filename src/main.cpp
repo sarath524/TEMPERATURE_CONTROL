@@ -7,7 +7,10 @@
 #include "FreeSans24pt7b.h"
 #include <math.h>
 #include <Arduino_BuiltIn.h>
-#include <NimBLEDevice.h>
+
+#define AMBIENT_SENSOR_PIN 34
+#define TOP_SENSOR_PIN 2
+#define BOTTOM_SENSOR_PIN 0
 
 #define TFT_RST 26  // IO 26
 #define TFT_RS  25  // IO 25
@@ -15,156 +18,72 @@
 #define TFT_SDI 13  // HSPI-MOSI
 #define TFT_CS  15  // HSPI-SS0
 #define TFT_LED 0   // 0 if wired to +5V directly
-
-int sensor_analog_pin0 = 34, sensor_analog_pin1 = 2, sensor_analog_pin2= 0;
-
-BLEServer *pServer = NULL;
-BLECharacteristic *pTxCharacteristic;
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
-char char_received;
-
-SPIClass hspi(HSPI);
-
-char temp_value0[50];
-char temp_value1[50];
-char temp_value2[50];
-char Avg_Value[50];
-
-float V1, ln0,V2,V3,V4,V5,V6,ln1,ln2;
-
-float Rntc0, Temp0,Temp1,Temp2,Rntc1,Rntc2,avg_temp;
 #define TFT_BRIGHTNESS 200 // Initial brightness of TFT backlight (optional)
 
+SPIClass hspi(HSPI);
 TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHTNESS);
 
-class MyServerCallbacks : public BLEServerCallbacks
-{
-  void onConnect(BLEServer *pServer)
-  {
-    deviceConnected = true;
-  };
+static char ambient_temperature_str[50];
+static char top_temperature_str[50];
+static char bottom_temperature_str[50];
+static char chamber_temperature_str[50];
 
-  void onDisconnect(BLEServer *pServer)
+float ambient_temperature,top_temperature,bottom_temperature,chamber_temperature;
+
+float convert_to_temperature(int analogValue)
+{
+  float coeff_A1 = 0.00335401643468053;
+  float coeff_B1 = 0.00025698501802;
+  float coeff_C1 = 0.0000026201306709;
+  float coeff_D1 = 0.000000063830907998;
+  int R25 = 10000;
+  float V1 = analogValue * (3.30 / 4095.00);
+  float V2 = ((10 * V1) + (1.63 * 3.4)) / 13.4;
+  float Rntc0 = ((3.3 / V2) - 1) * 15000;
+  float X = Rntc0 / R25;
+  float temp = log(X);
+  float result = coeff_A1 + coeff_B1 * temp + coeff_C1 * pow(temp, 2) + coeff_D1 * pow(temp, 3);
+  return ((1 / result)-273.15);
+}
+
+int get_sensor_average(byte sensorPin)
+{
+  int sensor_value = 0;
+  for (int i = 0; i < 50; i++) 
   {
-    deviceConnected = false;
+    sensor_value += analogRead(sensorPin);
   }
-};
-
-void temp_sensor_voltage() {
-
-int sensor_value0 = 0;
-int sensor_value1 = 0;
-int sensor_value2 = 0;
-
-int sensor_analogue0 = 0;
-int sensor_analogue1 = 0;
-int sensor_analogue2 = 0;
-
-float V1, ln0,V2,V3,V4,V5,V6,ln1,ln2;
- 
-for (int i = 0; i < 50; i++) 
-{
-sensor_value0 = sensor_value0 + analogRead(sensor_analog_pin0);
-sensor_analogue0=sensor_value0/50;
-}
-for (int i = 0; i < 50; i++)
-{
-sensor_value1 = sensor_value1 + analogRead(sensor_analog_pin1);
-sensor_analogue1=sensor_value1/50;
-}
-for (int i = 0; i < 50; i++)
-{
-sensor_value2 = sensor_value2 + analogRead(sensor_analog_pin2);
-sensor_analogue2=sensor_value2/50;
-}
-
-  V1 =sensor_analogue0 * (3.3 / 4095.00);
-  V2= V1/1.34;
-  Rntc0 = ((3.3 / V2) - 1) * 15000;
-  ln0 = log(Rntc0/ 10000);
-  Temp0 = (1 / ((ln0 / 3977) + (1 / 298.15))) - 273.15;
-  Serial.println(sensor_analogue0);
-  delay(1000);
-
-  V3=sensor_analogue1 * (3.3 / 4095.00);
-  V4= V3/1.34;
-  Rntc1 = ((3.3 / V4) - 1) * 15000;
-  ln1 = log(Rntc1/ 10000);
-  Temp1 = (1 / ((ln1 / 3977) + (1 / 298.15))) - 273.15;
-  Serial.println(sensor_analogue1);
-  delay(1000);
-  
-
-  V5 =sensor_analogue2 * (3.3/ 4095.00);
-  V5= V5/1.34;
-  Rntc2 = ((3.3 / V5) - 1) * 15000;
-  ln2 = log(Rntc2/ 10000);
-  Temp2 = (1 / ((ln2 / 3977) + (1 / 298.15))) - 273.15;
-  Serial.println(sensor_analogue2);
-  delay(1000);
-  
-  
-if (Temp0>0)
-Temp0=Temp0+13;
-else if (Temp0<0)
-Temp0 = Temp0+12.15;
-else if (Temp0=0) 
-Temp0=0; 
-Serial.println(Temp0);
-
-  
-if (Temp1>0)
-Temp1=Temp1+13;
-else if (Temp1<0)
-Temp1 = Temp1+12.15;
-else if (Temp1=0) 
-Temp1=0; 
-Serial.println(Temp1);
-
-  
-if (Temp2>0)
-Temp2=Temp2+13;
-else if (Temp2<0)
-Temp2 = Temp2+12.15;
-else if (Temp2=0) 
-Temp2=0; 
-Serial.println(Temp2);
-
-avg_temp=Temp1+Temp2;
-avg_temp= avg_temp/2;
- 
-
+  return (int)(sensor_value/50);
 }
 
 void display()
 {
-  dtostrf(Temp0,5,2,temp_value0);
+  dtostrf(ambient_temperature,5,2,ambient_temperature_str);
 
-  dtostrf(Temp1,5,2,temp_value1 );
+  dtostrf(top_temperature,5,2,top_temperature_str );
 
-  dtostrf(Temp2,5,2,temp_value2);
+  dtostrf(bottom_temperature,5,2,bottom_temperature_str);
 
-  dtostrf(avg_temp,5,2,Avg_Value);
+  dtostrf(chamber_temperature,5,2,chamber_temperature_str);
 
   tft.setFont(Terminal12x16);
   tft.setOrientation(3);
   tft.setGFXFont(&FreeSans24pt7b);
-  tft.clear();
-  tft.drawGFXText(30, 115, Avg_Value, COLOR_WHITE);
+   tft.clear();
+  tft.drawGFXText(30, 115, chamber_temperature_str, COLOR_WHITE);
   tft.drawCircle(162, 85, 3, COLOR_WHITE);
   tft.drawGFXText(165, 115 , "C",COLOR_WHITE);
-  tft.drawText(130 , 34 ,temp_value0, COLOR_WHITE);
+  tft.drawText(130 , 34 ,ambient_temperature_str, COLOR_WHITE);
   tft.drawCircle(197, 33, 2, COLOR_WHITE);
   tft.drawText(200, 34 , "C");
   tft.drawText(150, 50 , "AMB");
   tft.setFont(Terminal6x8);
   tft.drawText(120, 130 , "TOP ");
-  tft.drawText(150, 130 , temp_value1);
+  tft.drawText(150, 130 , top_temperature_str);
   tft.drawCircle(188, 131, 2, COLOR_WHITE);
   tft.drawText(190, 130 , "C");
   tft.drawText(120, 150 , "BOT ");
-  tft.drawText(150,150,temp_value2);
+  tft.drawText(150,150,bottom_temperature_str);
   tft.drawCircle(188, 151, 2, COLOR_WHITE);
   tft.drawText(190, 150 ,"C");
 
@@ -194,13 +113,22 @@ void setup()
   tft.begin(hspi);
   Serial.begin(9600);
 
-  pinMode(sensor_analog_pin0, INPUT);
-  pinMode(sensor_analog_pin1, INPUT);
-  pinMode(sensor_analog_pin2, INPUT);
+  pinMode(AMBIENT_SENSOR_PIN, INPUT);
+  pinMode(TOP_SENSOR_PIN, INPUT);
+  pinMode(BOTTOM_SENSOR_PIN, INPUT);
 }
 
 void loop() { 
-  temp_sensor_voltage();
+  int analog_value = get_sensor_average(AMBIENT_SENSOR_PIN);
+  ambient_temperature = convert_to_temperature(analog_value);
+  
+  analog_value = get_sensor_average(TOP_SENSOR_PIN);
+  top_temperature = convert_to_temperature(analog_value);
+  
+  analog_value = get_sensor_average(BOTTOM_SENSOR_PIN);
+  bottom_temperature = convert_to_temperature(analog_value);
+  
+  chamber_temperature = (top_temperature + bottom_temperature) /2;
   display();
-  delay(10);
+  delay(1000);
 }
