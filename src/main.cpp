@@ -12,6 +12,9 @@
 #define TOP_SENSOR_PIN 2
 #define BOTTOM_SENSOR_PIN 0
 
+#define PWM_PIN 5
+#define SHUNT_RESIST_FB_PIN 35                                                                                                                               
+
 #define TFT_RST 26  // IO 26
 #define TFT_RS  25  // IO 25
 #define TFT_CLK 14  // HSPI-SCK
@@ -19,6 +22,8 @@
 #define TFT_CS  15  // HSPI-SS0
 #define TFT_LED 0   // 0 if wired to +5V directly
 #define TFT_BRIGHTNESS 200 // Initial brightness of TFT backlight (optional)
+
+uint32_t Feedback_Value = 0;
 
 SPIClass hspi(HSPI);
 TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHTNESS);
@@ -56,6 +61,16 @@ int get_sensor_average(byte sensorPin)
   return (int)(sensor_value/50);
 }
 
+void get_feedback_value()
+{
+  for(int i;  i< 10; i++){
+  Feedback_Value = analogRead(SHUNT_RESIST_FB_PIN) ;
+  }
+  Feedback_Value = Feedback_Value / 10;
+  
+
+0
+}
 void display()
 {
   dtostrf(ambient_temperature,5,2,ambient_temperature_str);
@@ -118,7 +133,7 @@ void setup()
   pinMode(BOTTOM_SENSOR_PIN, INPUT);
 }
 
-void loop() { 
+void loop() { 0
   int analog_value = get_sensor_average(AMBIENT_SENSOR_PIN);
   ambient_temperature = convert_to_temperature(analog_value);
   
