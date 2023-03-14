@@ -12,7 +12,12 @@
 #define TOP_SENSOR_PIN 2
 #define BOTTOM_SENSOR_PIN 0
 
-#define PWM_PIN 5
+#define RED_LED 19
+#define GREEN_LED 23
+#define BLUE_LED 18
+#define LIMIT_SWITCH 17
+#define BUZZER 4
+
 #define SHUNT_RESIST_FB_PIN 35                                                                                                                               
 
 #define TFT_RST 26  // IO 26
@@ -23,6 +28,11 @@
 #define TFT_LED 0   // 0 if wired to +5V directly
 #define TFT_BRIGHTNESS 200 // Initial brightness of TFT backlight (optional)
 
+unsigned long previousMillis = 0;
+int buttonState;
+int lastButtonState = HIGH;
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 10000;
 uint32_t Feedback_Value = 0;
 
 SPIClass hspi(HSPI);
@@ -67,10 +77,9 @@ void get_feedback_value()
   Feedback_Value = analogRead(SHUNT_RESIST_FB_PIN) ;
   }
   Feedback_Value = Feedback_Value / 10;
-  
 
-0
 }
+
 void display()
 {
   dtostrf(ambient_temperature,5,2,ambient_temperature_str);
@@ -80,7 +89,7 @@ void display()
   dtostrf(bottom_temperature,5,2,bottom_temperature_str);
 
   dtostrf(chamber_temperature,5,2,chamber_temperature_str);
-
+ 
   tft.setFont(Terminal12x16);
   tft.setOrientation(3);
   tft.setGFXFont(&FreeSans24pt7b);
@@ -131,9 +140,21 @@ void setup()
   pinMode(AMBIENT_SENSOR_PIN, INPUT);
   pinMode(TOP_SENSOR_PIN, INPUT);
   pinMode(BOTTOM_SENSOR_PIN, INPUT);
+
+  pinMode(LIMIT_SWITCH, INPUT);
+  pinMode(BUZZER, OUTPUT);
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(BLUE_LED, OUTPUT);
+  pinMode(BUZZER,OUTPUT);
 }
 
-void loop() { 0
+void loop() 
+{ 
+  unsigned long currentMillis = millis();
+
+  if ((currentMillis - previousMillis) >= 1000)
+  {
   int analog_value = get_sensor_average(AMBIENT_SENSOR_PIN);
   ambient_temperature = convert_to_temperature(analog_value);
   
@@ -145,5 +166,44 @@ void loop() { 0
   
   chamber_temperature = (top_temperature + bottom_temperature) /2;
   display();
-  delay(1000);
+
+  if (chamber_temperature>1||chamber_temperature<7)
+  {
+    // Blue Led    
+      digitalWrite(RED_LED, HIGH); 
+      digitalWrite(GREEN_LED, HIGH);// turn the LED on (HIGH is the voltage level)                    // wait for a second
+      digitalWrite(BLUE_LED, LOW);
+  }
+  else if(chamber_temperature>7)
+  {
+    // Red Led
+      digitalWrite(RED_LED, LOW);
+      digitalWrite(GREEN_LED, HIGH); // turn the LED on (HIGH is the voltage level                    // wait for a second
+      digitalWrite(BLUE_LED, HIGH);
+  }
+  }
+
+  int reading = digitalRead(LIMIT_SWITCH);
+
+  if (reading != lastButtonState ) 
+  {
+    // reset the debouncing timer
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+      //Serial.println("lastDebounceTime");
+      if (reading != buttonState) {
+      buttonState = reading;
+
+
+      if (buttonState == LOW) {
+        Serial.println("limitswitch is pressed");
+        tone(BUZZER,1000);
+        buttonState = HIGH;
+      }
+    }
+  }
+  
 }
+
