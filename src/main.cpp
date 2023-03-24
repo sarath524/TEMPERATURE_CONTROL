@@ -6,6 +6,10 @@
 #include "SPI.h"
 #include "TFT_22_ILI9225.h"
 
+#include<Wire.h>
+#include "RTClib.h"
+RTC_DS1307 RTC;
+
 #include "FreeSans24pt7b.h"
 #include <math.h>
 #include <Arduino_BuiltIn.h>
@@ -58,8 +62,15 @@ static char ambient_temperature_str[50];
 static char top_temperature_str[50];
 static char bottom_temperature_str[50];
 static char chamber_temperature_str[50];
+static char month_str[10];
+static char day_str[10];
+static char year_str[10];
+static char hour_str[10];
+static char minute_str[10];
+static char second_str[10];
 
 float ambient_temperature,top_temperature,bottom_temperature,chamber_temperature;
+int month,day,year,hour,minute,second;
 
 float convert_to_temperature(int analogValue)
 {
@@ -87,29 +98,62 @@ int get_sensor_average(byte sensorPin)
   return (int)(sensor_value/50);
 }
 
+void get_rtc(){
+  
+      DateTime now = RTC.now();
+       month=now.month();
+       day=now.day();
+       year=now.year();
+       hour=now.hour();
+       minute=now.minute();
+       second=now.second();
+
+}
 
 void display()
 {
-  dtostrf(ambient_temperature,5,2,ambient_temperature_str);
-
-  dtostrf(top_temperature,5,2,top_temperature_str );
-
-  dtostrf(bottom_temperature,5,2,bottom_temperature_str);
-
-  dtostrf(chamber_temperature,5,2,chamber_temperature_str);
+  dtostrf(ambient_temperature,5,1,ambient_temperature_str);
+  dtostrf(top_temperature,5,1,top_temperature_str );
+  dtostrf(bottom_temperature,5,1,bottom_temperature_str);
+  dtostrf(chamber_temperature,5,1,chamber_temperature_str);
+  dtostrf(month,2,0,month_str);
+  dtostrf(day,2,0,day_str);
+  dtostrf(year,3,0,year_str);
+  dtostrf(hour,2,0,hour_str);
+  dtostrf(minute,2,0,minute_str);
+  dtostrf(second,2,0,second_str);
+  
  
   tft.setFont(Terminal12x16);
+ 
+  // tft.drawText(3, 12 ,year_str );
+  // tft.drawText(6, 4 ,hour_str );
+  // tft.drawText(6, 8 ,minute_str );
+  // tft.drawText(6, 12 ,second_str );
   tft.setOrientation(3);
   tft.setGFXFont(&FreeSans24pt7b);
-   tft.clear();
+  //tft.fillRectangle(120, 30, 140, 35, COLOR_BLACK);
+ // tft.clear();
   tft.drawGFXText(30, 115, chamber_temperature_str, COLOR_WHITE);
   tft.drawCircle(162, 85, 3, COLOR_WHITE);
   tft.drawGFXText(165, 115 , "C",COLOR_WHITE);
+ // tft.fillRectangle (30, 80, 200, 150, COLOR_BLACK);
   tft.drawText(130 , 34 ,ambient_temperature_str, COLOR_WHITE);
   tft.drawCircle(197, 33, 2, COLOR_WHITE);
   tft.drawText(200, 34 , "C");
   tft.drawText(150, 50 , "AMB");
+  
   tft.setFont(Terminal6x8);
+  tft.drawText(0, 4 ,month_str );
+  tft.drawText(15, 4 ,"/" );
+  tft.drawText(25, 4 ,day_str );
+  tft.drawText(40, 4 ,"/" );
+  tft.drawText(50, 4 ,year_str );
+  tft.drawText(0, 24 ,hour_str );
+  tft.drawText(15, 24 ,":" );
+  tft.drawText(25, 24 ,minute_str );
+  tft.drawText(38, 24 ,":" );
+  tft.drawText(48, 24 ,second_str );
   tft.drawText(120, 130 , "TOP ");
   tft.drawText(150, 130 , top_temperature_str);
   tft.drawCircle(188, 131, 2, COLOR_WHITE);
@@ -161,6 +205,9 @@ void setup()
   hspi.begin();
   tft.begin(hspi);
   Serial.begin(115200);
+  Wire.begin();
+   RTC.begin();
+
   ledcSetup(ledChannel, freq, resolution);
   ledcAttachPin(PWM_PIN, ledChannel);
 
@@ -174,7 +221,7 @@ void setup()
   pinMode(RED_LED, OUTPUT);
   pinMode(GREEN_LED, OUTPUT);
   pinMode(BLUE_LED, OUTPUT);
-  digitalWrite(buzzerPin,LOW);
+  digitalWrite(buzzerPin,HIGH); 
    // if(!SD.begin()){
   //     Serial.println("Card Mount Failed");
   //     return;
@@ -191,7 +238,6 @@ void setup()
 void loop() 
 { 
   
-
   unsigned long currentMillis = millis();
 
   if ((currentMillis - previousMillis) >= 1000)
@@ -206,88 +252,62 @@ void loop()
   bottom_temperature = convert_to_temperature(analog_value);
   
   chamber_temperature = (top_temperature + bottom_temperature) /2;
-  display();
 
-   previousMillis = currentMillis;
+
+  previousMillis = currentMillis;
   Serial.print(chamber_temperature);
-  
+  get_rtc();
+  display();
   }
 
-  if(chamber_temperature <=2)
-      ledcWrite(ledChannel, 77);
 
-  else if (chamber_temperature >=2 && chamber_temperature<=4)
-  {
-     ledcWrite(ledChannel, 81);
-    // Blue Led    
-      digitalWrite(RED_LED, HIGH); 
-      digitalWrite(GREEN_LED, HIGH);// turn the LED on (HIGH is the voltage level)                    // wait for a second
-      digitalWrite(BLUE_LED, LOW);
-  }
-  else if(chamber_temperature>4)
-  {
-       ledcWrite(ledChannel, 92);
-    // Red Led
-      //tone(buzzerPin,1000,500);
-      digitalWrite(RED_LED, HIGH);
-      digitalWrite(GREEN_LED, LOW);// turn the LED on (HIGH is the voltage level                    // wait for a second
-      digitalWrite(BLUE_LED,HIGH);
-  }
-  
-  
-  
-  
-//   int analog_value1=0;
+  // if(chamber_temperature <=2)
+  //     ledcWrite(ledChannel, 77);
 
-//   for(int i=0; i <30;i++)
-//   {
-//    analog_value1 += analogRead(SHUNT_RESIST_FB_PIN);
-//   }
-//   analog_value1=analog_value1/30;
-
-//   float voltage= analog_value1*(3.30/4095.00);
-//   i_actual=voltage/0.1;
-
-//   float e = i_actual - i_expected;
-//   if(e >= 0 )
-//   {
-//     MAX_PWM + 1;
-//    analogWrite(PWM_PIN,MAX_PWM);
-//   }
-//   else if( e < 0)
-//   {
-//     MIN_PWM - 1;
-//     analogWrite(PWM_PIN,MIN_PWM);
-//   }
-//  
-//  }
-
- 
-  // int reading = digitalRead(LIMIT_SWITCH);
-  // if (reading != lastButtonState ) 
+  // else if (chamber_temperature >=2 && chamber_temperature<=4)
   // {
-  //   // reset the debouncing 
-  //         digitalWrite(buzzerPin,LOW);
-  //         noTone(buzzerPin);
-  //   Serial.println("limitswitch is stopped");
-    
-  //   lastDebounceTime = millis();
+  //    ledcWrite(ledChannel, 81);
+  //   // Blue Led    
+  //     digitalWrite(RED_LED, HIGH); 
+  //     digitalWrite(GREEN_LED, HIGH);// turn the LED on (HIGH is the voltage level)                    // wait for a second
+  //     digitalWrite(BLUE_LED, LOW);
   // }
-
-  // if ((millis() - lastDebounceTime) > debounceDelay) 
+  // else if(chamber_temperature>4)
   // {
-  //   if (reading != buttonState)
-  //   {
-  //     buttonState = reading;
-  //    }
-  //     if (buttonState == LOW) {
-  //       Serial.println("limitswitch is pressed");
-  //       digitalWrite(buzzerPin,HIGH);
-  //       tone(buzzerPin,784);
-  //       buttonState = HIGH;
-  //     }
+  //      ledcWrite(ledChannel, 92);
+  //   // Red Led
+  //     //tone(buzzerPin,1000,500);
+  //     digitalWrite(RED_LED, HIGH);
+  //     digitalWrite(GREEN_LED, LOW);// turn the LED on (HIGH is the voltage level                    // wait for a second
+  //     digitalWrite(BLUE_LED,HIGH);
+  // }
+  
+
+  int reading = digitalRead(LIMIT_SWITCH);
+  if (reading != lastButtonState ) 
+  {
+    // reset the debouncing 
+          digitalWrite(buzzerPin,LOW);
+          noTone(buzzerPin);
+    Serial.println("limitswitch is stopped");
     
-  //        }
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) 
+  {
+    if (reading != buttonState)
+    {
+      buttonState = reading;
+     }
+      if (buttonState == LOW) {
+        Serial.println("limitswitch is pressed");
+        digitalWrite(buzzerPin,HIGH);
+        tone(buzzerPin,784);
+        buttonState = HIGH;
+      }
+    
+         }
     
   //   lastButtonState = reading;
 //storing the chamber temperature value every minute
