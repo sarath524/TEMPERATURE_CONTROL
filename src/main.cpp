@@ -1,6 +1,8 @@
 // Include application, user and local libraries
 //tft display updated
 //.
+#include "FS.h"
+#include "SD.h"
 #include "SPI.h"
 #include "TFT_22_ILI9225.h"
 
@@ -9,16 +11,25 @@
 #include <Arduino_BuiltIn.h>
 
 #define AMBIENT_SENSOR_PIN 34
-#define TOP_SENSOR_PIN 2
-#define BOTTOM_SENSOR_PIN 0
+#define TOP_SENSOR_PIN 39
+#define BOTTOM_SENSOR_PIN 2
 
 #define RED_LED 19
 #define GREEN_LED 23
 #define BLUE_LED 18
-#define LIMIT_SWITCH 17
-#define BUZZER 4
+const int LIMIT_SWITCH = 35; 
+int buzzerPin = 4;
 
-#define SHUNT_RESIST_FB_PIN 35                                                                                                                               
+#define PWM_PIN 27 
+const int freq = 500;
+const int ledChannel = 0;
+const int resolution = 8;
+#define SHUNT_RESIST_FB_PIN 12                                                                                                                               
+#define LOW_CURRENT_MODE 1.75
+#define MED_CURRENT_MODE 3
+#define HIGH_CURRENT_MODE 4
+#define MAX_PWM 82
+#define MIN_PWM 92
 
 #define TFT_RST 26  // IO 26
 #define TFT_RS  25  // IO 25
@@ -29,11 +40,16 @@
 #define TFT_BRIGHTNESS 200 // Initial brightness of TFT backlight (optional)
 
 unsigned long previousMillis = 0;
+unsigned long previousMillis1 = 0; // will store last time LED1 was updated
+
 int buttonState;
 int lastButtonState = HIGH;
 unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 10000;
+unsigned long debounceDelay = 6000;
 uint32_t Feedback_Value = 0;
+int i_expected;
+int i_actual;
+int dutycycle = 81;
 
 SPIClass hspi(HSPI);
 TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHTNESS);
@@ -71,14 +87,6 @@ int get_sensor_average(byte sensorPin)
   return (int)(sensor_value/50);
 }
 
-void get_feedback_value()
-{
-  for(int i;  i< 10; i++){
-  Feedback_Value = analogRead(SHUNT_RESIST_FB_PIN) ;
-  }
-  Feedback_Value = Feedback_Value / 10;
-
-}
 
 void display()
 {
@@ -131,31 +139,64 @@ void display()
 
 }
 
+void writeFile(fs::FS &fs, const char * path, const char * message)
+{
+    Serial.printf("Writing file: %s\n", path);
+
+    File file = fs.open(path, FILE_WRITE);
+    if(!file){
+        Serial.println("Failed to open file for writing");
+        return;
+    }
+    if(file.print(message)){
+        Serial.println("File written");
+    } else {
+        Serial.println("Write failed");
+    }
+    file.close();
+}
+
 void setup() 
 {
   hspi.begin();
   tft.begin(hspi);
-  Serial.begin(9600);
+  Serial.begin(115200);
+  ledcSetup(ledChannel, freq, resolution);
+  ledcAttachPin(PWM_PIN, ledChannel);
+
 
   pinMode(AMBIENT_SENSOR_PIN, INPUT);
   pinMode(TOP_SENSOR_PIN, INPUT);
   pinMode(BOTTOM_SENSOR_PIN, INPUT);
 
   pinMode(LIMIT_SWITCH, INPUT);
-  pinMode(BUZZER, OUTPUT);
+  pinMode(buzzerPin, OUTPUT);
   pinMode(RED_LED, OUTPUT);
   pinMode(GREEN_LED, OUTPUT);
   pinMode(BLUE_LED, OUTPUT);
-  pinMode(BUZZER,OUTPUT);
-}
+  digitalWrite(buzzerPin,LOW);
+   // if(!SD.begin()){
+  //     Serial.println("Card Mount Failed");
+  //     return;
+  // }
+  // uint8_t cardType = SD.cardType();
+
+  // if(cardType == CARD_NONE){
+  //     Serial.println("No SD card attached");
+  //     return;
+  // }
+
+ }
 
 void loop() 
 { 
+  
+
   unsigned long currentMillis = millis();
 
   if ((currentMillis - previousMillis) >= 1000)
   {
-  int analog_value = get_sensor_average(AMBIENT_SENSOR_PIN);
+   int analog_value = get_sensor_average(AMBIENT_SENSOR_PIN);
   ambient_temperature = convert_to_temperature(analog_value);
   
   analog_value = get_sensor_average(TOP_SENSOR_PIN);
@@ -167,43 +208,101 @@ void loop()
   chamber_temperature = (top_temperature + bottom_temperature) /2;
   display();
 
-  if (chamber_temperature>1||chamber_temperature<7)
+   previousMillis = currentMillis;
+  Serial.print(chamber_temperature);
+  
+  }
+
+  if(chamber_temperature <=2)
+      ledcWrite(ledChannel, 77);
+
+  else if (chamber_temperature >=2 && chamber_temperature<=4)
   {
+     ledcWrite(ledChannel, 81);
     // Blue Led    
       digitalWrite(RED_LED, HIGH); 
       digitalWrite(GREEN_LED, HIGH);// turn the LED on (HIGH is the voltage level)                    // wait for a second
       digitalWrite(BLUE_LED, LOW);
   }
-  else if(chamber_temperature>7)
+  else if(chamber_temperature>4)
   {
+       ledcWrite(ledChannel, 92);
     // Red Led
-      digitalWrite(RED_LED, LOW);
-      digitalWrite(GREEN_LED, HIGH); // turn the LED on (HIGH is the voltage level                    // wait for a second
-      digitalWrite(BLUE_LED, HIGH);
-  }
-  }
-
-  int reading = digitalRead(LIMIT_SWITCH);
-
-  if (reading != lastButtonState ) 
-  {
-    // reset the debouncing timer
-    lastDebounceTime = millis();
-  }
-
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-      //Serial.println("lastDebounceTime");
-      if (reading != buttonState) {
-      buttonState = reading;
-
-
-      if (buttonState == LOW) {
-        Serial.println("limitswitch is pressed");
-        tone(BUZZER,1000);
-        buttonState = HIGH;
-      }
-    }
+      //tone(buzzerPin,1000,500);
+      digitalWrite(RED_LED, HIGH);
+      digitalWrite(GREEN_LED, LOW);// turn the LED on (HIGH is the voltage level                    // wait for a second
+      digitalWrite(BLUE_LED,HIGH);
   }
   
-}
+  
+  
+  
+//   int analog_value1=0;
+
+//   for(int i=0; i <30;i++)
+//   {
+//    analog_value1 += analogRead(SHUNT_RESIST_FB_PIN);
+//   }
+//   analog_value1=analog_value1/30;
+
+//   float voltage= analog_value1*(3.30/4095.00);
+//   i_actual=voltage/0.1;
+
+//   float e = i_actual - i_expected;
+//   if(e >= 0 )
+//   {
+//     MAX_PWM + 1;
+//    analogWrite(PWM_PIN,MAX_PWM);
+//   }
+//   else if( e < 0)
+//   {
+//     MIN_PWM - 1;
+//     analogWrite(PWM_PIN,MIN_PWM);
+//   }
+//  
+//  }
+
+ 
+  // int reading = digitalRead(LIMIT_SWITCH);
+  // if (reading != lastButtonState ) 
+  // {
+  //   // reset the debouncing 
+  //         digitalWrite(buzzerPin,LOW);
+  //         noTone(buzzerPin);
+  //   Serial.println("limitswitch is stopped");
+    
+  //   lastDebounceTime = millis();
+  // }
+
+  // if ((millis() - lastDebounceTime) > debounceDelay) 
+  // {
+  //   if (reading != buttonState)
+  //   {
+  //     buttonState = reading;
+  //    }
+  //     if (buttonState == LOW) {
+  //       Serial.println("limitswitch is pressed");
+  //       digitalWrite(buzzerPin,HIGH);
+  //       tone(buzzerPin,784);
+  //       buttonState = HIGH;
+  //     }
+    
+  //        }
+    
+  //   lastButtonState = reading;
+//storing the chamber temperature value every minute
+
+  // if (currentMillis - previousMillis1 >= 6000) 
+  // {
+
+  //   writeFile(SD, "/phloton.txt",chamber_temperature_str); 
+  //   previousMillis1 = currentMillis;
+  // }
+  }
+  
+
+
+
+  
+
 
