@@ -32,6 +32,13 @@
 #define TFT_LED 0          // 0 if wired to +5V directly
 #define TFT_BRIGHTNESS 200 // Initial brightness of TFT backlight (optional)
 
+#define SCK  14
+#define MISO  12
+#define MOSI  13
+#define CS  5
+
+SPIClass spi = SPIClass(HSPI);
+
 const int LIMIT_SWITCH = 35;
 int buzzerPin = 4;
 const int freq = 500;
@@ -39,6 +46,7 @@ const int ledChannel = 0;
 const int resolution = 8;
 
 unsigned long previousMillis = 0;
+unsigned long previousMillis1 = 0;
 
 uint32_t Feedback_Value = 0;
 int i_expected;
@@ -191,6 +199,22 @@ void writeFile(fs::FS &fs, const char *path, const char *message)
   file.close();
 }
 
+void appendFile(fs::FS &fs, const char * path, const char * message){
+    Serial.printf("Appending to file: %s\n", path);
+
+    File file = fs.open(path, FILE_APPEND);
+    if(!file){
+        Serial.println("Failed to open file for appending");
+        return;
+    }
+    if(file.print(message)){
+        Serial.println("Message appended");
+    } else {
+        Serial.println("Append failed");
+    }
+    file.close();
+}
+
 bool buzzerStatus = false;
 unsigned long buzzerStartTime = 0;
 
@@ -202,23 +226,45 @@ void runBuzzer()
     buzzerStartTime = millis();
   }
   if ((millis() - buzzerStartTime) > 6000 && buzzerStatus)
+    appendFile(SD, "/phloton.txt",hour_str);
+    appendFile(SD, "/phloton.txt",minute_str);
+    appendFile(SD, "/phloton.txt",second_str);
+    appendFile(SD, "/phloton.txt","-");
+    appendFile(SD, "/phloton.txt",chamber_temperature_str);
+    appendFile(SD, "/phloton.txt","\n");
     analogWrite(buzzerPin, 128);
 }
 
 void stopBuzzer()
 {
   buzzerStatus = false;
+     appendFile(SD, "/phloton.txt",hour_str);
+    appendFile(SD, "/phloton.txt",minute_str);
+    appendFile(SD, "/phloton.txt",second_str);
+    appendFile(SD, "/phloton.txt","-");
+    appendFile(SD, "/phloton.txt",chamber_temperature_str);
+    appendFile(SD, "/phloton.txt","\n");
   analogWrite(buzzerPin, 0);
 }
 
 void setup()
 {
+  Serial.begin(115200);
   hspi.begin();
   tft.begin(hspi);
+  spi.begin(SCK, MISO, MOSI, CS);
+    if(!SD.begin(CS,spi,80000000)){
+        Serial.println("Card Mount Failed");
+        return;
+    }
+    uint8_t cardType = SD.cardType();
 
+    if(cardType == CARD_NONE){
+        Serial.println("No SD card attached");
+        return;
+    }
   Wire.begin();
   RTC.begin();
-  Serial.begin(115200);
 
   ledcSetup(ledChannel, freq, resolution);
   ledcAttachPin(PWM_PIN, ledChannel);
@@ -236,16 +282,7 @@ void setup()
   button.setPressTicks(100);
   button.attachDuringLongPress(runBuzzer);
   button.attachLongPressStop(stopBuzzer);
-  // if(!SD.begin()){
-  //     Serial.println("Card Mount Failed");
-  //     return;
-  // }
-  // uint8_t cardType = SD.cardType();
 
-  // if(cardType == CARD_NONE){
-  //     Serial.println("No SD card attached");
-  //     return;
-  // }
 }
 
 void loop()
@@ -293,12 +330,13 @@ void loop()
      display();
   }
   button.tick();
-  // storing the chamber temperature value every minute
+ // storing the chamber temperature value every minute
 
-  // if (currentMillis - previousMillis1 >= 6000)
-  // {
+  if (currentMillis - previousMillis1 >= 60000)
+  {
 
-  //   writeFile(SD, "/phloton.txt",chamber_temperature_str);
-  //   previousMillis1 = currentMillis;
-  // }
+    appendFile(SD, "/phloton.txt",chamber_temperature_str);
+    appendFile(SD, "/phloton.txt","\n");
+    previousMillis1 = currentMillis;
+  }
 }
