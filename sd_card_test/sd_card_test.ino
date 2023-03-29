@@ -16,6 +16,8 @@
 #include "SD.h"
 #include "SPI.h"
 
+
+
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\n", dirname);
 
@@ -175,6 +177,7 @@ void testFileIO(fs::FS &fs, const char * path){
 
 void setup(){
     Serial.begin(115200);
+   
     if(!SD.begin()){
         Serial.println("Card Mount Failed");
         return;
@@ -208,7 +211,7 @@ void setup(){
 
 
     writeFile(SD, "/phloton.txt", "HI");
-}//    appendFile(SD, "/hello.txt", "World!\n");
+//    appendFile(SD, "/hello.txt", "World!\n");
 //    readFile(SD, "/hello.txt");
 //    deleteFile(SD, "/foo.txt");
 //    renameFile(SD, "/hello.txt", "/foo.txt");
@@ -216,6 +219,7 @@ void setup(){
 //    testFileIO(SD, "/test.txt");
     Serial.printf("Total space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
     Serial.printf("Used space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
+
 }
 
 void loop(){
