@@ -23,7 +23,7 @@ void setup ()
 
 
   }
-// RTC.adjust(DateTime(23,04,04,11,48,20));
+//RTC.adjust(DateTime(23,04,12,18,28,20));
 }
 
 void loop ()

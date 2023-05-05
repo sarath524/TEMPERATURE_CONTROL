@@ -176,12 +176,16 @@ void testFileIO(fs::FS &fs, const char * path){
 }
 
 void setup(){
+
+    pinMode(14, OUTPUT);
+  digitalWrite(14,HIGH);
     Serial.begin(115200);
    
     if(!SD.begin()){
         Serial.println("Card Mount Failed");
         return;
     }
+    
     uint8_t cardType = SD.cardType();
 
     if(cardType == CARD_NONE){

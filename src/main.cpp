@@ -81,10 +81,10 @@ TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHT
 
 OneButton button(LIMIT_SWITCH, true);
 
-static char ambient_temperature_str[50];
-static char top_temperature_str[50];
-static char bottom_temperature_str[50];
-static char chamber_temperature_str[50];
+static char ambient_temperature_str[10];
+static char top_temperature_str[10];
+static char bottom_temperature_str[10];
+static char chamber_temperature_str[10];
 static char month_str[10];
 static char day_str[10];
 static char year_str[10];
@@ -276,13 +276,15 @@ void display()
   sprintf(hour_str, "%02d", hour);
   sprintf(minute_str, "%02d", minute);
   sprintf(second_str, "%02d", second);
-
+  Serial.println(chamber_temperature_str);
   tft.setOrientation(3);
   tft.setFont(Terminal22x32);
+  tft.fillRectangle(10, 93, 130, 145, COLOR_BLACK);
   tft.drawText(10, 93, chamber_temperature_str, COLOR_WHITE);
   tft.drawCircle(132, 89, 3, COLOR_WHITE);
   tft.drawText(135, 93, "C", COLOR_WHITE);
   tft.setFont(Terminal12x16);
+  tft.fillRectangle(130,44,160,64,COLOR_BLACK);
   tft.drawText(130, 44, ambient_temperature_str, COLOR_WHITE);
   tft.drawCircle(197, 43, 2, COLOR_WHITE);
   tft.drawText(200, 44, "C");
@@ -308,14 +310,14 @@ void display()
   tft.drawCircle(188, 166, 2, COLOR_WHITE);
   tft.drawText(190, 165, "C");
 
-  x = 191;
-  y = 5;
-  tft.drawRectangle(x, y, x + 22, y + 10, COLOR_WHITE);
-  tft.fillRectangle(x + 2, y + 2, x + 5, y + 8, COLOR_WHITE);
-  tft.fillRectangle(x + 7, y + 2, x + 10, y + 8, COLOR_WHITE);
-  tft.fillRectangle(x + 12, y + 2, x + 15, y + 8, COLOR_WHITE);
-  tft.fillRectangle(x + 17, y + 2, x + 20, y + 8, COLOR_WHITE);
-  tft.fillRectangle(x + 22, y + 3, x + 24, y + 6, COLOR_WHITE);
+  // x = 191;
+  // y = 5;
+  // tft.drawRectangle(x, y, x + 22, y + 10, COLOR_WHITE);
+  // tft.fillRectangle(x + 2, y + 2, x + 5, y + 8, COLOR_WHITE);
+  // tft.fillRectangle(x + 7, y + 2, x + 10, y + 8, COLOR_WHITE);
+  // tft.fillRectangle(x + 12, y + 2, x + 15, y + 8, COLOR_WHITE);
+  // tft.fillRectangle(x + 17, y + 2, x + 20, y + 8, COLOR_WHITE);
+  // tft.fillRectangle(x + 22, y + 3, x + 24, y + 6, COLOR_WHITE);
 
   if (deviceConnected)
   {
@@ -397,7 +399,7 @@ void runBuzzer()
         open_1--;
       }
     
-    analogWrite(buzzerPin, 128);
+    digitalWrite(buzzerPin, LOW);
   }
     
 }
@@ -421,7 +423,7 @@ void stopBuzzer()
         appendFile(SD, "/phloton.txt","\n");
         close1--;
       }
-  analogWrite(buzzerPin, 0);
+  digitalWrite(buzzerPin, HIGH);
 }
 
 void sd_card_init()
@@ -448,6 +450,8 @@ sd_status=SD.begin(CS,spi,80000000);
 
 void setup()
 {
+  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin,HIGH);
   Serial.begin(115200);
   hspi.begin();
   tft.begin(hspi);
@@ -467,20 +471,25 @@ void setup()
   pinMode(BOTTOM_SENSOR_PIN, INPUT);
 
   pinMode(LIMIT_SWITCH, INPUT);
-  pinMode(buzzerPin, OUTPUT);
   pinMode(RED_LED, OUTPUT);
   pinMode(GREEN_LED, OUTPUT);
   pinMode(BLUE_LED, OUTPUT);
-  digitalWrite(buzzerPin, LOW);
   button.setPressTicks(100);
   button.attachDuringLongPress(runBuzzer);
   button.attachLongPressStop(stopBuzzer);
   
   #ifdef TEST
-  appendFile(SD, "/phloton.txt","Time             ");
-  appendFile(SD, "/phloton.txt","chamber_temp   ");
-  appendFile(SD, "/phloton.txt","top_temp   ");
+  appendFile(SD, "/phloton.txt","Date");
+  appendFile(SD, "/phloton.txt",",");
+  appendFile(SD, "/phloton.txt","Time");
+  appendFile(SD, "/phloton.txt",",");
+  appendFile(SD, "/phloton.txt","chamber_temp");
+  appendFile(SD, "/phloton.txt",",");
+  appendFile(SD, "/phloton.txt","top_temp");
+  appendFile(SD, "/phloton.txt",",");
   appendFile(SD, "/phloton.txt","bot_temp");
+  appendFile(SD, "/phloton.txt",",");
+  appendFile(SD, "/phloton.txt","ambient_temp");
   appendFile(SD, "/phloton.txt","\n");
   #endif
 
@@ -489,7 +498,7 @@ void setup()
 
 void loop()
 {
-   // getting Top,Bottom,Ambient temp value every one sec
+    // getting Top,Bottom,Ambient temp value every one sec
   unsigned long currentMillis = millis();
   
   if ((currentMillis - previousMillis) >= 1000)
@@ -524,23 +533,25 @@ void loop()
     else if (chamber_temperature > 4)
     {
       ledcWrite(ledChannel, 92);//in this pwm write the current will maintain in 4 amps for pre_cooling 
-      // Red Led
-      // tone(buzzerPin,1000,500);
+    }
+    else if(chamber_temperature > 4.5)
+    {
+      /*  Red Led   */ 
       digitalWrite(RED_LED, HIGH);
       digitalWrite(GREEN_LED, LOW); // turn the LED on (HIGH is the voltage level                    // wait for a second
       digitalWrite(BLUE_LED, HIGH);
     }
-    
+    display();
       
   }
   #endif
   
-  display();
+  
   get_rtc();
   button.tick();
   
  // storing the chamber temperature value every minute in SD card
-  #ifdef TEST
+  #ifdef TEST   
       if (currentMillis - previousMillis1 >= 30000)
       { 
         if(rtc_status==false)
@@ -550,19 +561,26 @@ void loop()
             appendFile(SD, "/phloton.txt",temp);
             appendFile(SD, "/phloton.txt"," :");
             appendFile(SD, "/phloton.txt",temp);
-            }
+              }
+          appendFile(SD, "/phloton.txt",month_str);
+          appendFile(SD, "/phloton.txt","/");
+          appendFile(SD, "/phloton.txt",day_str);
+          appendFile(SD, "/phloton.txt","/");
+          appendFile(SD, "/phloton.txt",year_str);
+          appendFile(SD, "/phloton.txt",",");
           appendFile(SD, "/phloton.txt",hour_str);
-          appendFile(SD, "/phloton.txt"," :");
+          appendFile(SD, "/phloton.txt","/");
           appendFile(SD, "/phloton.txt",minute_str);
-          appendFile(SD, "/phloton.txt"," :");
+          appendFile(SD, "/phloton.txt","/");
           appendFile(SD, "/phloton.txt",second_str);
-          appendFile(SD, "/phloton.txt","->  ");
-          appendFile(SD, "/phloton.txt","    ");
+          appendFile(SD, "/phloton.txt",",");
           appendFile(SD, "/phloton.txt",chamber_temperature_str);
-          appendFile(SD, "/phloton.txt","        ");
+          appendFile(SD, "/phloton.txt",",");
           appendFile(SD, "/phloton.txt",top_temperature_str);
-          appendFile(SD, "/phloton.txt","      ");
+          appendFile(SD, "/phloton.txt",",");
           appendFile(SD, "/phloton.txt",bottom_temperature_str);
+          appendFile(SD, "/phloton.txt",",");
+          appendFile(SD, "/phloton.txt",ambient_temperature_str);
           appendFile(SD, "/phloton.txt","\n");
           previousMillis1 = currentMillis;
       }
@@ -580,6 +598,12 @@ void loop()
             appendFile(SD, "/phloton.txt"," :");
             appendFile(SD, "/phloton.txt",temp);
             }
+        appendFile(SD, "/phloton.txt",month_str);
+        appendFile(SD, "/phloton.txt"," :");
+        appendFile(SD, "/phloton.txt",day_str);
+        appendFile(SD, "/phloton.txt"," :");
+        appendFile(SD, "/phloton.txt",year_str);
+        appendFile(SD, "/phloton.txt","    ");   
         appendFile(SD, "/phloton.txt",hour_str);
         appendFile(SD, "/phloton.txt"," :");
         appendFile(SD, "/phloton.txt",minute_str);
@@ -602,10 +626,9 @@ void loop()
       {
         init_data.remove(1);
         init_data += chamber_temperature;
-        init_data += "Ab";
+        init_data += " Amb";
         init_data += ambient_temperature;
-        init_data += "Bt ";
-        init_data += Bat_Bar;
+       
       }
       else 
       {
@@ -644,3 +667,4 @@ void loop()
     }
 
 }
+
