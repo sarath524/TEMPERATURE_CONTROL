@@ -7,7 +7,8 @@ RTC_DS1307 RTC;
 void setup ()
 
 {
-
+  pinMode(4, OUTPUT);
+  digitalWrite(4,HIGH);
   Serial.begin(9600);
 
   Wire.begin();
@@ -23,13 +24,12 @@ void setup ()
 
 
   }
-//RTC.adjust(DateTime(23,04,12,18,28,20));
+RTC.adjust(DateTime(23,05,24,10,04,20));
 }
 
-void loop ()
+void loop()
 
 {
-
   DateTime now = RTC.now();
 
   Serial.print(now.month(), DEC);
