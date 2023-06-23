@@ -255,7 +255,7 @@ void get_batt_value()
   dtostrf(batt_voltage, 3, 1, batt_voltage_str);
   Serial.println(batt_voltage_str);
   battery_range=map(battery_value, 3040,4095,0,100);
-  
+  //
 }
 
 int convert_range_to_bar()
