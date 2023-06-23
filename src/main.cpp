@@ -53,11 +53,8 @@ bool oldDeviceConnected = false;
 #define MOSI 13
 #define CS 5
 #define TEST
-<<<<<<< HEAD
 #define LIMIT_SWITCH 35
 
-=======
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 // #define FINAL
 bool rtc_status;
 bool sd_status;
@@ -71,14 +68,8 @@ const int resolution = 8;
 unsigned long previousMillis = 0;
 unsigned long previousMillis1 = 0;
 
-<<<<<<< HEAD
 
 int batt_range_bar;
-=======
-byte Bat_Bar = 3;
-byte Voltage = 3.4;
-byte Current = 1.2;
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 int x;
 int y;
 
@@ -97,7 +88,6 @@ TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHT
 char file_name[19];
 
 OneButton button(LIMIT_SWITCH, true);
-<<<<<<< HEAD
 static char chamber_temperature_str[6];
 static char current_shunt_cc_str[5];
 static char current_shunt_sym_str[5];
@@ -106,15 +96,6 @@ static char batt_bar_str[5];
 static char ambient_temperature_str[6];
 static char top_temperature_str[6];
 static char bottom_temperature_str[6];
-=======
-static char current_shunt_cc_str[5];
-static char current_shunt_sym_str[5];
-static char batt_voltage_str[4];
-static char ambient_temperature_str[6];
-static char top_temperature_str[6];
-static char bottom_temperature_str[6];
-static char chamber_temperature_str[6];
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 static char month_str[4];
 static char day_str[4];
 static char year_str[6];
@@ -123,18 +104,12 @@ static char minute_str[4];
 static char second_str[4];
 static char initial_command[50];
 static char temp[3] = "00";
-<<<<<<< HEAD
 bool ota_flag = false;
-=======
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 
 float ambient_temperature, top_temperature, bottom_temperature, chamber_temperature;
 int month, day, year, hour, minute, second;
 int battery_range;
-<<<<<<< HEAD
 float batt_voltage;
-=======
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 
 class MyServerCallbacks : public BLEServerCallbacks
 {
@@ -155,10 +130,9 @@ String st_init_data = "";
 std::string tx_data = "";
 // char data;
 
-// bool BLE_device_command(String inCmd)
-// {
+bool BLE_device_command(String inCmd)
+{
 
-<<<<<<< HEAD
   if (inCmd.indexOf("HS") >= 0)
   {
     init_data = "h\0";
@@ -170,34 +144,6 @@ std::string tx_data = "";
     return 1;
   }
 }
-=======
-//   if (inCmd.indexOf("BT") >= 0)
-//   {
-//     init_data = "h\0";
-//     return 1;
-//   }
-//   else if (inCmd.indexOf("AT") >= 0)
-//   {
-//     init_data = "Cm\0";
-//     return 1;
-//   }
-//   else if (inCmd.indexOf("VT") >= 0)
-//   {
-//     init_data = "l\0";
-//     return 1;
-//   }
-//   else if (inCmd.indexOf("CT") >= 0)
-//   {
-//     init_data = "0\0";
-//     return 1;
-//   }
-//   else
-//   {
-//     init_data = "invalidCmd";
-//     return 1;
-//   }
-// }
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 
 class MyCallbacks : public BLECharacteristicCallbacks
 {
@@ -376,50 +322,6 @@ void sd_card_logo(){
 //   return (voltage_shunt_cc / 21);
 // }
 
-int convert_range_to_bar()
-{
-
-  if ((battery_range > 75) && (battery_range <= 100))
-    return 4;
-  else if ((battery_range > 50) && (battery_range <= 75))
-    return 3;
-  else if ((battery_range > 25) && (battery_range <= 50))
-    return 2;
-  else if ((battery_range > 7) && (battery_range <= 25))
-    return 1;
-  else
-    return 0;
-}
-
-// void display_battery_bars(int bars)
-// {
-//   int x = 105;
-//   int y = 0;
-
-//   if (bars >= 1)
-
-//   if (bars >= 2)
-    
-//   if (bars >= 3)
-    
-//   if (bars >= 4)
-    
-// }
-
-void get_batt_value()
-{
-
-  battery_value=0;
-  for (int i = 0; i < 5; i++)
-      battery_value = battery_value + analogRead(BATTERY_VOLTAGE_PIN);
-  battery_value = battery_value / 5;
-
-  batt_range=map(battery_value, 3400,4095,0,100);
-  battery_value=0;
-
-}
-
-
 void get_rtc()
 {
   // getting month,day,year,hour,minute,sec using functions
@@ -447,14 +349,9 @@ void blu_logoon()
 
 void blu_logooff()
 {
-<<<<<<< HEAD
   x = 175;
   y = 3;
   tft.fillRectangle(x - 18, y - 2, x +7, y + 13, COLOR_BLACK);
-=======
-
-  tft.fillRectangle(x - 18, y - 2, x - 3, y + 10, COLOR_BLACK);
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 }
 
 void time()
@@ -492,17 +389,10 @@ void display()
   tft.drawText(135, 87, "C", COLOR_WHITE);
   tft.setFont(Terminal12x16);
   tft.fillRectangle(130, 44, 160, 64, COLOR_BLACK);
-<<<<<<< HEAD
   tft.drawText(137, 35, ambient_temperature_str, COLOR_WHITE);
   tft.drawCircle(197, 35, 2, COLOR_WHITE);
   tft.drawText(200, 35, "C");
   tft.drawText(150, 55, "AMB");
-=======
-  tft.drawText(130, 44, ambient_temperature_str, COLOR_WHITE);
-  tft.drawCircle(197, 43, 2, COLOR_WHITE);
-  tft.drawText(200, 44, "C");
-  tft.drawText(150, 70, "AMB");
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 
   tft.setFont(Terminal6x8);
 
@@ -524,40 +414,21 @@ void display()
   tft.drawCircle(188, 166, 2, COLOR_WHITE);
   tft.drawText(190, 165, "C");
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   if (deviceConnected)
   {
     blu_logoon();
   }
   else
   {
-<<<<<<< HEAD
-=======
-
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
     blu_logooff();
   }
 }
 
-<<<<<<< HEAD
 void display_ota_mode()
 {
   tft.fillRectangle(0, 0, 240, 200, COLOR_BLACK);
   tft.setFont(Terminal22x32);
   tft.drawText(5, 87, "OTA MODE ON", COLOR_WHITE);
-=======
-   // x = 191;
-  // y = 5;
-  // tft.drawRectangle(x, y, x + 22, y + 10, COLOR_WHITE);
-  // tft.fillRectangle(x + 2, y + 2, x + 5, y + 8, COLOR_WHITE);
-  // tft.fillRectangle(x + 7, y + 2, x + 10, y + 8, COLOR_WHITE);
-  // tft.fillRectangle(x + 12, y + 2, x + 15, y + 8, COLOR_WHITE);
-  // tft.fillRectangle(x + 17, y + 2, x + 20, y + 8, COLOR_WHITE);
-  // tft.fillRectangle(x + 22, y + 3, x + 24, y + 6, COLOR_WHITE);
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 }
 
 void writeFile(fs::FS &fs, const char *path, const char *message)
@@ -594,40 +465,21 @@ void appendFile(fs::FS &fs, const char *path, const char *message)
   {
     Serial.println("Failed to open file for appending");
 
-<<<<<<< HEAD
     sd_card_logo();
-=======
-    tft.drawRectangle(a, b, a + 20, b + 10, COLOR_WHITE);
-    tft.drawText(a + 4, b + 2, "SD");
-    tft.drawLine(a, b - 2, a + 22, b + 12, COLOR_WHITE);
-    sd_status = 0;
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
     return;
   }
   if (file.print(message))
   {
     Serial.println("Message appended");
-<<<<<<< HEAD
       x = 20;
       y = 135;
     tft.fillRectangle(x+0,y+5,x+30,y+40,COLOR_BLACK);
-=======
-    tft.drawRectangle(a, b, a + 20, b + 10, COLOR_BLACK);
-    tft.drawText(a + 4, b + 2, "   ");
-    tft.drawLine(a, b - 2, a + 22, b + 12, COLOR_BLACK);
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
     sd_status = 1;
   }
   else
   {
     Serial.println("Append failed");
-<<<<<<< HEAD
     sd_card_logo();
-=======
-    tft.drawRectangle(a, b, a + 20, b + 10, COLOR_WHITE);
-    tft.drawText(a + 4, b + 2, "SD");
-    tft.drawLine(a, b - 2, a + 22, b + 12, COLOR_WHITE);
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   }
   file.close();
 }
@@ -650,7 +502,6 @@ void runBuzzer()
     while (open_1 == 1)
     {
       Serial.println("  Lid is Open");
-<<<<<<< HEAD
       appendFile(SD, file_name, hour_str);
       appendFile(SD, file_name, " :");
       appendFile(SD, file_name, minute_str);
@@ -660,17 +511,6 @@ void runBuzzer()
       appendFile(SD, file_name, chamber_temperature_str);
       appendFile(SD, file_name, ", Lid is Open ");
       appendFile(SD, file_name, "\n");
-=======
-      appendFile(SD, "/phloton.csv", hour_str);
-      appendFile(SD, "/phloton.csv", " :");
-      appendFile(SD, "/phloton.csv", minute_str);
-      appendFile(SD, "/phloton.csv", " :");
-      appendFile(SD, "/phloton.csv", second_str);
-      appendFile(SD, "/phloton.csv", "->  ");
-      appendFile(SD, "/phloton.csv", chamber_temperature_str);
-      appendFile(SD, "/phloton.csv", ", Lid is Open ");
-      appendFile(SD, "/phloton.csv", "\n");
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
       open_1--;
     }
 
@@ -685,7 +525,6 @@ void stopBuzzer()
   while (close1 == 1)
   {
     Serial.println(" started storing data of Lid close");
-<<<<<<< HEAD
     appendFile(SD, file_name, "Lid close ");
     appendFile(SD, file_name, hour_str);
     appendFile(SD, file_name, " :");
@@ -696,18 +535,6 @@ void stopBuzzer()
     appendFile(SD, file_name, chamber_temperature_str);
     appendFile(SD, file_name, ", Lid is Close");
     appendFile(SD, file_name, "\n");
-=======
-    appendFile(SD, "/phloton.csv", "Lid close ");
-    appendFile(SD, "/phloton.csv", hour_str);
-    appendFile(SD, "/phloton.csv", " :");
-    appendFile(SD, "/phloton.csv", minute_str);
-    appendFile(SD, "/phloton.csv", " :");
-    appendFile(SD, "/phloton.csv", second_str);
-    appendFile(SD, "/phloton.csv", "->  ");
-    appendFile(SD, "/phloton.csv", chamber_temperature_str);
-    appendFile(SD, "/phloton.csv", ", Lid is Close");
-    appendFile(SD, "/phloton.csv", "\n");
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
     close1--;
   }
   digitalWrite(buzzerPin, HIGH);
@@ -715,11 +542,7 @@ void stopBuzzer()
 
 void sd_card_init()
 {
-<<<<<<< HEAD
   sd_status = SD.begin(CS, spi, 10000000);
-=======
-  sd_status = SD.begin(CS, spi, 80000000);
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   Serial.println(sd_status);
   tft.setOrientation(3);
   tft.setFont(Terminal6x8);
@@ -728,7 +551,6 @@ void sd_card_init()
   if (!sd_status)
   {
     Serial.println("Card Mount Failed");
-<<<<<<< HEAD
     sd_card_logo();
   }
   else
@@ -736,17 +558,6 @@ void sd_card_init()
     x = 20;
     y = 135;
     tft.fillRectangle(x+0,y+5,x+30,y+40,COLOR_BLACK);
-=======
-    tft.drawRectangle(a, b, a + 20, b + 10, COLOR_WHITE);
-    tft.drawText(a + 4, b + 2, "SD");
-    tft.drawLine(a, b - 2, a + 22, b + 12, COLOR_WHITE);
-  }
-  else
-  {
-    tft.drawRectangle(a, b, a + 20, b + 10, COLOR_BLACK);
-    tft.drawText(a + 4, b + 2, "    ");
-    tft.drawLine(a, b - 2, a + 22, b + 12, COLOR_BLACK);
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   }
 
   uint8_t cardType = SD.cardType();
@@ -754,13 +565,7 @@ void sd_card_init()
   if (cardType == CARD_NONE)
   {
     Serial.println("No SD card attached");
-<<<<<<< HEAD
     sd_card_logo();
-=======
-    tft.drawRectangle(a, b, a + 20, b + 10, COLOR_WHITE);
-    tft.drawText(a + 4, b + 2, "SD");
-    tft.drawLine(a, b - 2, a + 22, b + 12, COLOR_WHITE);
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   }
 }
 
@@ -768,39 +573,23 @@ void getFileName()
 {
 
   sprintf(file_name, "/%02d%02d%02d%02d%02d%02d.csv", day, month, year, hour, minute, second);
-<<<<<<< HEAD
-
-=======
-  // sprintf(file_name, "%02d%02d%02d.csv", 02, 03, 05);
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   Serial.println("Creating test.txt. . .");
   myFile = SD.open(file_name, FILE_WRITE); //"file_name"is the file name to be created and FILE_WRITE is a command to create file.
   myFile.close();                          // Closing the file
   if (SD.exists(file_name))
-<<<<<<< HEAD
   { 
     // If the file test.txt exist.
     Serial.println("File Created and SD Card initiated");
-=======
-  { // If the file test.txt exist.
-    Serial.println("The test.txt exists.");
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
     tft.setFont(Terminal12x16);
     tft.drawText(1, 93, "logging started", COLOR_WHITE);
     delay(500);
     tft.clear();
   }
-<<<<<<< HEAD
 
   else
   { 
     // And if not
     Serial.println("File not Created and SD Card not initialized");
-=======
-  else
-  { // And if not
-    Serial.println("The test.txt doesn't exist.");
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   }
   Serial.println(file_name);
 }
@@ -815,17 +604,10 @@ void setup()
   spi.begin(SCK, MISO, MOSI, CS);
   sd_card_init();
 
-<<<<<<< HEAD
   Wire.begin(21, 22);
   rtc_status = RTC.begin();
 
   //RTC.adjust(DateTime(23,06,15,12,26,00));
-=======
-  Wire.begin(21,22);
-  rtc_status = RTC.begin();
-
-  //RTC.adjust(DateTime(23,06,05,12,45,00));
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 
   get_rtc();
   getFileName();
@@ -834,20 +616,12 @@ void setup()
 
   ledcSetup(ledChannel, freq, resolution);
   ledcAttachPin(PWM_PIN, ledChannel);
-<<<<<<< HEAD
   digitalWrite(PWM_PIN, LOW);
-=======
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 
   pinMode(AMBIENT_SENSOR_PIN, INPUT);
   pinMode(TOP_SENSOR_PIN, INPUT);
   pinMode(BOTTOM_SENSOR_PIN, INPUT);
 
-<<<<<<< HEAD
-=======
-  pinMode(LIMIT_SWITCH, INPUT);
-  // pinMode(RED_LED, OUTPUT);
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   pinMode(GREEN_LED, OUTPUT);
   pinMode(BLUE_LED, OUTPUT);
   button.setPressTicks(100);
@@ -865,7 +639,6 @@ void setup()
 
 void loop()
 {
-<<<<<<< HEAD
   get_rtc();
   button.tick();
 
@@ -946,12 +719,6 @@ void loop()
 // getting Top,Bottom,Ambient temp value every one sec
 
   if ((currentMillis - previousMillis) >= 3000)
-=======
-  // getting Top,Bottom,Ambient temp value every one sec
-  unsigned long currentMillis = millis();
-
-  if ((currentMillis - previousMillis) >= 1000)
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   {
     int analog_value = get_sensor_average(AMBIENT_SENSOR_PIN);
     ambient_temperature = convert_to_temperature(analog_value);
@@ -972,19 +739,10 @@ void loop()
     chamber_temperature = (top_temperature + bottom_temperature) / 2;
 
     previousMillis = currentMillis;
-<<<<<<< HEAD
+    //
     display();
     
     display_battery_bars(batt_range_bar);
-=======
-    Serial.println(chamber_temperature);
-    Serial.println(day_str);
-// using temperature_value controlling the constant_current in the container
-  #ifdef TEST
-    if (chamber_temperature <= 2)
-      ledcWrite(ledChannel, 77); //
-      
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
 
 
 #ifdef TEST
@@ -995,7 +753,6 @@ void loop()
     }
     else if (chamber_temperature >= 2 && chamber_temperature <= 4)
     {
-<<<<<<< HEAD
       ledcWrite(ledChannel, 150); // in this pwm write the current will maintain in 1.2 amps
       digitalWrite(GREEN_LED, LOW); // turn the LED on (HIGH is the voltage level)                    // wait for a second
       digitalWrite(BLUE_LED, HIGH);
@@ -1063,177 +820,11 @@ void loop()
 
      send_data_flag = false;
 
-=======
-      ledcWrite(ledChannel, 82); // in this pwm write the current will maintain in 1.2 amps
-      // Blue Led
-      // digitalWrite(RED_LED, HIGH);
-      digitalWrite(GREEN_LED, HIGH); // turn the LED on (HIGH is the voltage level)                    // wait for a second
-      digitalWrite(BLUE_LED, LOW);
-    }
-    else if (chamber_temperature > 4)
-    {
-      ledcWrite(ledChannel, 205);
-   
-      digitalWrite(GREEN_LED, LOW); // turn the LED on (HIGH is the voltage level                    // wait for a second
-      digitalWrite(BLUE_LED, HIGH);
-    }
-    display();
-#endif
-
-
-  }
-
-  int sensor_value_3 = 0;
-  for (int i = 0; i <= 100; i++)
-  {
-    sensor_value_3 += analogRead(SHUNT_RESIST_CC_PIN);
-    delayMicroseconds(200);
-  }
-
-  sensor_value_3=sensor_value_3/200;
-  float voltage_shunt_cc = sensor_value_3 * (3.3 / 4095.00);
-  voltage_shunt_cc = voltage_shunt_cc / 21;
-  float current_shunt_cc = voltage_shunt_cc / 0.03;
-  Serial.print("current_shunt_cc");
-  Serial.println(current_shunt_cc);
-
-  int sensor_value_1 = analogRead(SHUNT_RESIST_SYM_PIN);
-  float voltage_shunt_sym = sensor_value_1 * (3.3 / 4095.00);
-  voltage_shunt_sym = voltage_shunt_sym / 21;
-  float current_shunt_sym = voltage_shunt_cc / 0.025;
-  Serial.print("current_shunt_sym");
-  Serial.println(current_shunt_sym);
-
-  int sensor_value_2 = analogRead(BATTERY_VOLTAGE_PIN);
-  float batt_voltage = sensor_value_2 * (3.3 / 4095.00);
-
-  dtostrf(current_shunt_cc, 5, 1, current_shunt_cc_str);
-  dtostrf(current_shunt_sym, 5, 1, current_shunt_sym_str);
-  dtostrf(batt_voltage, 5, 1, batt_voltage_str);
-
-  get_rtc();
-  button.tick();
-
-  // storing the chamber temperature value every minute in SD card
-#ifdef TEST
-  if (currentMillis - previousMillis1 >= 3000)
-  {
-    if (rtc_status == false)
-    {
-      appendFile(SD, file_name, temp);
-      appendFile(SD, file_name, " :");
-      appendFile(SD, file_name, temp);
-      appendFile(SD, file_name, " :");
-      appendFile(SD, file_name, temp);
-    }
-
-    appendFile(SD, file_name, month_str);
-    appendFile(SD, file_name, "/");
-    appendFile(SD, file_name, day_str);
-    appendFile(SD, file_name, "/");
-    appendFile(SD, file_name, year_str);
-    appendFile(SD, file_name, "   ,");
-    appendFile(SD, file_name, hour_str);
-    appendFile(SD, file_name, ":");
-    appendFile(SD, file_name, minute_str);
-    appendFile(SD, file_name, ":");
-    appendFile(SD, file_name, second_str);
-    appendFile(SD, file_name, "  ,");
-    appendFile(SD, file_name, chamber_temperature_str);
-    appendFile(SD, file_name, "  ,");
-    appendFile(SD, file_name, top_temperature_str);
-    appendFile(SD, file_name, "  ,");
-    appendFile(SD, file_name, bottom_temperature_str);
-    appendFile(SD, file_name, "  ,");
-    appendFile(SD, file_name, ambient_temperature_str);
-    appendFile(SD, file_name, "  ,");
-    appendFile(SD, file_name, current_shunt_cc_str);
-    appendFile(SD, file_name, "  ,");
-    appendFile(SD, file_name, current_shunt_sym_str);
-    appendFile(SD, file_name, ",");
-    appendFile(SD, file_name, batt_voltage_str);
-    appendFile(SD, file_name, "\n");
-
-    previousMillis1 = currentMillis;
-  }
-#endif
-
-#ifdef FINAL
-  if (currentMillis - previousMillis1 >= 60000)
-  {
-    if (rtc_status == false)
-    {
-      appendFile(SD, "/file_name.csv", temp);
-      appendFile(SD, "/file_name.csv", " :");
-      appendFile(SD, "/file_name.csv", temp);
-      appendFile(SD, "/file_name.csv", " :");
-      appendFile(SD, "/file_name.csv", temp);
-    }
-    appendFile(SD, "/file_name.csv", month_str);
-    appendFile(SD, "/file_name.csv", "/");
-    appendFile(SD, "/file_name.csv", day_str);
-    appendFile(SD, "/file_name.csv", "/");
-    appendFile(SD, "/file_name.csv", year_str);
-    appendFile(SD, "/file_name.csv", ",   ");
-
-    appendFile(SD, "/file_name.csv", hour_str);
-    appendFile(SD, "/file_name.csv", ":");
-    appendFile(SD, "/file_name.csv", minute_str);
-    appendFile(SD, "/file_name.csv", ":");
-    appendFile(SD, "/file_name.csv", second_str);
-    appendFile(SD, "/file_name.csv", ",");
-    appendFile(SD, "/file_name.csv", chamber_temperature_str);
-    appendFile(SD, "/file_name.csv", "\n");
-    previousMillis1 = currentMillis;
-  }
-#endif
-
-  // sending cham_tem,atm_temp,Bat_level,Volt,current to the bluetooth app
-  if (deviceConnected)
-  {
-    init_data.remove(0);
-
-    init_data += day_str;
-    init_data += "/";
-    init_data += month_str;
-    init_data += "/";
-    init_data += year_str;
-    init_data += " ,";
-    init_data += hour_str;
-    init_data += ":";
-    init_data += minute_str;
-    init_data += ":";
-    init_data += second_str;
-    init_data += " ,";
-    init_data += chamber_temperature;
-    init_data += " ,";
-    init_data += top_temperature_str;
-    init_data += " ,";
-    init_data += bottom_temperature_str;
-    init_data += " ,";
-    init_data += ambient_temperature;
-
-    for (int i = 0; i < init_data.length(); i++)
-      st_init_data += init_data[i];
-
-    pTxCharacteristic->setValue(st_init_data); // Notify fromSerial.
-    pTxCharacteristic->notify();
-
-    for (int i = 0; i < init_data.length(); i++)
-      st_init_data.remove(i);
-
-    // send_data_flag = false;
-
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
     Serial.println(init_data);
 
     tx_data = "";
 
     delay(2000);
-<<<<<<< HEAD
-=======
-
->>>>>>> 49accc31724a9d69443c2381185f34727e0efa86
   }
 
   // disconnecting
