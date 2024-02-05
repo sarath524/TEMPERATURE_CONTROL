@@ -4,6 +4,8 @@
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
+#include "main.h"
+#include "Temp_sensor.h"
 
 #include "TFT_22_ILI9225.h"
 
@@ -27,9 +29,9 @@ bool oldDeviceConnected = false;
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
-#define AMBIENT_SENSOR_PIN 34
-#define TOP_SENSOR_PIN 39
-#define BOTTOM_SENSOR_PIN 36
+// #define AMBIENT_SENSOR_PIN 34
+// #define TOP_SENSOR_PIN 39
+// #define BOTTOM_SENSOR_PIN 36
 
 #define GREEN_LED 23
 #define BLUE_LED 18
@@ -37,7 +39,7 @@ bool oldDeviceConnected = false;
 #define PWM_PIN 27
 #define SHUNT_RESIST_CC_PIN 32
 #define SHUNT_RESIST_SYM_PIN 15
-#define BATTERY_VOLTAGE_PIN 33
+#define BATTERY_VOLTAGE_PIN 33  
 
 #define TFT_RST 26         // IO 26
 #define TFT_RS 2           // IO 25
@@ -53,33 +55,13 @@ bool oldDeviceConnected = false;
 #define CS 5
 #define LIMIT_SWITCH 35
 
-// #define FINAL
+#define FINAL
 bool rtc_status;
 bool sd_status;
 bool low_batt_status = false;
 
 SPIClass spi = SPIClass(HSPI);
 
-int buzzerPin = 4;
-const int freq = 500;
-const int ledChannel = 0;
-const int resolution = 8;
-
-unsigned long previousMillis = 0;
-unsigned long previousMillis1 = 0;
-unsigned long previousMillis2 = 0;
-
-int batt_range_bar;
-int x;
-int y;
-
-int batt_range;
-int prev_battery_range;
-int battery_value;
-uint32_t Feedback_Value = 0;
-int i_expected;
-int i_actual;
-int dutycycle = 81;
 
 File myFile;
 
@@ -89,28 +71,7 @@ TFT_22_ILI9225 tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED, TFT_BRIGHT
 char file_name[19];
 
 OneButton button(LIMIT_SWITCH, true);
-static char chamber_temperature_str[6];
-static char current_shunt_cc_str[5];
-static char current_shunt_sym_str[5];
-static char batt_voltage_str[5];
-static char batt_bar_str[5];
-static char ambient_temperature_str[6];
-static char top_temperature_str[6];
-static char bottom_temperature_str[6];
-static char month_str[4];
-static char day_str[4];
-static char year_str[6];
-static char hour_str[4];
-static char minute_str[4];
-static char second_str[4];
-static char initial_command[50];
-static char temp[3] = "00";
-bool ota_flag = false;
 
-float ambient_temperature, top_temperature, bottom_temperature, chamber_temperature;
-int month, day, year, hour, minute, second;
-int battery_range;
-float batt_voltage;
 
 class MyServerCallbacks : public BLEServerCallbacks
 {
@@ -210,33 +171,33 @@ void init_BLE()
   Serial.println("Waiting a client connection to notify...");
 }
 
-float convert_to_temperature(int analogValue)
-{
-  // transfering the analog value into temperature
-  float coeff_A1 = 0.00335401643468053;
-  float coeff_B1 = 0.00025698501802;
-  float coeff_C1 = 0.0000026201306709;
-  float coeff_D1 = 0.000000063830907998;
-  int R25 = 10000;
-  float V1 = analogValue * (3.30 / 4095.00);
-  float V2 = ((10 * V1) + (1.63 * 3.4)) / 13.4;
-  float Rntc0 = ((3.3 / V2) - 1) * 15000;
-  float X = Rntc0 / R25;
-  float temp = log(X);
-  float result = coeff_A1 + coeff_B1 * temp + coeff_C1 * pow(temp, 2) + coeff_D1 * pow(temp, 3);
-  return ((1 / result) - 273.15);
-}
+// float convert_to_temperature(int analogValue)
+// {
+//   // transfering the analog value into temperature
+//   float coeff_A1 = 0.00335401643468053;
+//   float coeff_B1 = 0.00025698501802;
+//   float coeff_C1 = 0.0000026201306709;
+//   float coeff_D1 = 0.000000063830907998;
+//   int R25 = 10000;
+//   float V1 = analogValue * (3.30 / 4095.00);
+//   float V2 = ((10 * V1) + (1.63 * 3.4)) / 13.4;
+//   float Rntc0 = ((3.3 / V2) - 1) * 15000;
+//   float X = Rntc0 / R25;
+//   float temp = log(X);
+//   float result = coeff_A1 + coeff_B1 * temp + coeff_C1 * pow(temp, 2) + coeff_D1 * pow(temp, 3);
+//   return ((1 / result) - 273.15);
+// }
 
-int get_sensor_average(byte sensorPin)
-{
-  // getting average from the analog pin and returning the value of divided from the sample rate
-  int sensor_value = 0;
-  for (int i = 0; i < 30; i++)
-  {
-    sensor_value += analogRead(sensorPin);
-  }
-  return (int)(sensor_value / 30);
-}
+// int get_sensor_average(byte sensorPin)
+// {
+//   // getting average from the analog pin and returning the value of divided from the sample rate
+//   int sensor_value = 0;
+//   for (int i = 0; i < 30; i++)
+//   {
+//     sensor_value += analogRead(sensorPin);
+//   }
+//   return (int)(sensor_value / 30);
+// }
 
 float convert_to_current(int analogvalue_1)
 {
@@ -672,13 +633,7 @@ void setup()
   tft.begin(hspi);
   spi.begin(SCK, MISO, MOSI, CS);
   get_batt_value(100);
-  // if(battery_range < 5){
-  //   tft.drawText(20, 50, "Low battery", COLOR_WHITE);
-  //   digitalWrite(buzzerPin, LOW);
-  //   delay(500);
-  //   digitalWrite(buzzerPin, HIGH);
-  //   //delay(3000);
-  // }
+
   if (battery_range > 5)
   {
     sd_card_init();
@@ -697,9 +652,11 @@ void setup()
     ledcAttachPin(PWM_PIN, ledChannel);
     digitalWrite(PWM_PIN, LOW);
 
-    pinMode(AMBIENT_SENSOR_PIN, INPUT);
-    pinMode(TOP_SENSOR_PIN, INPUT);
-    pinMode(BOTTOM_SENSOR_PIN, INPUT);
+    // pinMode(AMBIENT_SENSOR_PIN, INPUT);
+    // pinMode(TOP_SENSOR_PIN, INPUT);
+    // pinMode(BOTTOM_SENSOR_PIN, INPUT);
+
+    init_sensor_pins();
 
     pinMode(GREEN_LED, OUTPUT);
     pinMode(BLUE_LED, OUTPUT);
