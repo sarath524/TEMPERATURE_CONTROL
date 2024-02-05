@@ -1,4 +1,4 @@
-# Phloton
+# TEMP_CONTROL
    This product is about cooling the vaccines with a battery powered electrical device
    
 ## TFT Display
